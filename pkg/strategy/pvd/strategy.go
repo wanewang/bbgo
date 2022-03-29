@@ -1,4 +1,4 @@
-package rebalance
+package pvd
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"github.com/c9s/bbgo/pkg/types"
 )
 
-const ID = "rebalance"
+const ID = "pvdot"
 
 var log = logrus.WithField("strategy", ID)
 
@@ -51,15 +51,19 @@ func ElementwiseProduct(m1, m2 map[string]fixedpoint.Value) map[string]fixedpoin
 type Strategy struct {
 	Notifiability *bbgo.Notifiability
 
-	Interval      types.Interval              `json:"interval"`
-	BaseCurrency  string                      `json:"baseCurrency"`
-	TargetWeights map[string]fixedpoint.Value `json:"targetWeights"`
-	Threshold     fixedpoint.Value            `json:"threshold"`
-	IgnoreLocked  bool                        `json:"ignoreLocked"`
-	Verbose       bool                        `json:"verbose"`
-	DryRun        bool                        `json:"dryRun"`
+	Interval        types.Interval   `json:"interval"`
+	Window          int              `json:"window"`
+	BaseCurrency    string           `json:"baseCurrency"`
+	QuoteCurrencies []string         `json:"quoteCurrencies"`
+	Threshold       fixedpoint.Value `json:"threshold"`
+	IgnoreLocked    bool             `json:"ignoreLocked"`
+	Verbose         bool             `json:"verbose"`
+	DryRun          bool             `json:"dryRun"`
+
 	// max amount to buy or sell per order
 	MaxAmount fixedpoint.Value `json:"maxAmount"`
+
+	set PVDotSet
 }
 
 func (s *Strategy) ID() string {
@@ -67,16 +71,6 @@ func (s *Strategy) ID() string {
 }
 
 func (s *Strategy) Validate() error {
-	if len(s.TargetWeights) == 0 {
-		return fmt.Errorf("targetWeights should not be empty")
-	}
-
-	for currency, weight := range s.TargetWeights {
-		if weight.Float64() < 0 {
-			return fmt.Errorf("%s weight: %f should not less than 0", currency, weight.Float64())
-		}
-	}
-
 	if s.Threshold.Sign() < 0 {
 		return fmt.Errorf("threshold should not less than 0")
 	}
@@ -95,24 +89,33 @@ func (s *Strategy) Subscribe(session *bbgo.ExchangeSession) {
 }
 
 func (s *Strategy) Run(ctx context.Context, orderExecutor bbgo.OrderExecutor, session *bbgo.ExchangeSession) error {
-	s.TargetWeights = Normalize(s.TargetWeights)
+	iw := types.IntervalWindow{Interval: s.Interval, Window: s.Window}
+	s.set = PVDotSet{IntervalWindow: iw, session: session, BaseCurrency: s.BaseCurrency, QuoteCurrencies: s.QuoteCurrencies}
+	err := s.set.InitIndicators(ctx)
+	if err != nil {
+		return err
+	}
+
 	session.MarketDataStream.OnKLineClosed(func(kline types.KLine) {
+		s.set.Update(kline)
 		s.rebalance(ctx, orderExecutor, session)
 	})
 	return nil
 }
 
 func (s *Strategy) rebalance(ctx context.Context, orderExecutor bbgo.OrderExecutor, session *bbgo.ExchangeSession) {
-	prices, err := s.getPrices(ctx, session)
+	targetWeights := s.set.TargetWeights()
+
+	prices, err := s.getPrices(ctx, session, targetWeights)
 	if err != nil {
 		return
 	}
 
 	balances := session.Account.Balances()
-	quantities := s.getQuantities(balances)
+	quantities := s.getQuantities(balances, targetWeights)
 	marketValues := ElementwiseProduct(prices, quantities)
 
-	orders := s.generateSubmitOrders(prices, marketValues)
+	orders := s.generateSubmitOrders(prices, marketValues, targetWeights)
 	for _, order := range orders {
 		log.Infof("generated submit order: %s", order.String())
 	}
@@ -128,10 +131,10 @@ func (s *Strategy) rebalance(ctx context.Context, orderExecutor bbgo.OrderExecut
 	}
 }
 
-func (s *Strategy) getPrices(ctx context.Context, session *bbgo.ExchangeSession) (map[string]fixedpoint.Value, error) {
+func (s *Strategy) getPrices(ctx context.Context, session *bbgo.ExchangeSession, targetWeights map[string]fixedpoint.Value) (map[string]fixedpoint.Value, error) {
 	prices := make(map[string]fixedpoint.Value)
 
-	for currency := range s.TargetWeights {
+	for currency := range targetWeights {
 		if currency == s.BaseCurrency {
 			prices[currency] = fixedpoint.One
 			continue
@@ -150,9 +153,9 @@ func (s *Strategy) getPrices(ctx context.Context, session *bbgo.ExchangeSession)
 	return prices, nil
 }
 
-func (s *Strategy) getQuantities(balances types.BalanceMap) map[string]fixedpoint.Value {
+func (s *Strategy) getQuantities(balances types.BalanceMap, targetWeights map[string]fixedpoint.Value) map[string]fixedpoint.Value {
 	quantities := make(map[string]fixedpoint.Value)
-	for currency := range s.TargetWeights {
+	for currency := range targetWeights {
 		if s.IgnoreLocked {
 			quantities[currency] = balances[currency].Total()
 		} else {
@@ -162,7 +165,7 @@ func (s *Strategy) getQuantities(balances types.BalanceMap) map[string]fixedpoin
 	return quantities
 }
 
-func (s *Strategy) generateSubmitOrders(prices, marketValues map[string]fixedpoint.Value) []types.SubmitOrder {
+func (s *Strategy) generateSubmitOrders(prices, marketValues map[string]fixedpoint.Value, targetWeights map[string]fixedpoint.Value) []types.SubmitOrder {
 	var submitOrders []types.SubmitOrder
 
 	currentWeights := Normalize(marketValues)
@@ -170,7 +173,7 @@ func (s *Strategy) generateSubmitOrders(prices, marketValues map[string]fixedpoi
 
 	log.Infof("total value: %f", totalValue.Float64())
 
-	for currency, targetWeight := range s.TargetWeights {
+	for currency, targetWeight := range targetWeights {
 		if currency == s.BaseCurrency {
 			continue
 		}
@@ -227,12 +230,8 @@ func (s *Strategy) generateSubmitOrders(prices, marketValues map[string]fixedpoi
 
 func (s *Strategy) getSymbols() []string {
 	var symbols []string
-	for currency := range s.TargetWeights {
-		if currency == s.BaseCurrency {
-			continue
-		}
-		symbol := currency + s.BaseCurrency
-		symbols = append(symbols, symbol)
+	for _, c := range s.QuoteCurrencies {
+		symbols = append(symbols, c+s.BaseCurrency)
 	}
 	return symbols
 }
