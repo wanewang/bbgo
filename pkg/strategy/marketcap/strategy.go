@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"time"
 
 	"github.com/sirupsen/logrus"
 
 	"github.com/c9s/bbgo/pkg/bbgo"
 	"github.com/c9s/bbgo/pkg/fixedpoint"
+	"github.com/c9s/bbgo/pkg/glassnode"
 	"github.com/c9s/bbgo/pkg/types"
 )
 
@@ -22,7 +24,7 @@ func init() {
 
 type Strategy struct {
 	Notifiability *bbgo.Notifiability
-	glassnode     Glassnode
+	Client        *glassnode.RestClient
 
 	Interval         types.Interval   `json:"interval"`
 	BaseCurrency     string           `json:"baseCurrency"`
@@ -33,6 +35,11 @@ type Strategy struct {
 	DryRun           bool             `json:"dryRun"`
 	// max amount to buy or sell per order
 	MaxAmount fixedpoint.Value `json:"maxAmount"`
+}
+
+func (s *Strategy) Initialize() error {
+	s.Client = glassnode.NewClientFromEnv()
+	return nil
 }
 
 func (s *Strategy) ID() string {
@@ -68,7 +75,6 @@ func (s *Strategy) Subscribe(session *bbgo.ExchangeSession) {
 }
 
 func (s *Strategy) Run(ctx context.Context, orderExecutor bbgo.OrderExecutor, session *bbgo.ExchangeSession) error {
-	s.glassnode = *NewGlassnode()
 
 	session.MarketDataStream.OnKLineClosed(func(kline types.KLine) {
 		err := s.rebalance(ctx, orderExecutor, session)
@@ -79,12 +85,31 @@ func (s *Strategy) Run(ctx context.Context, orderExecutor bbgo.OrderExecutor, se
 	return nil
 }
 
-func (s *Strategy) getTargetWeights(ctx context.Context) (types.Float64Slice, error) {
-	var weights types.Float64Slice
+func (s *Strategy) GetMarketCapInUSD(ctx context.Context, asset string) (float64, error) {
+	// 24 hours and 30 minutes ago
+	since := time.Now().Add(-24*time.Hour - 30*time.Minute).Unix()
 
+	req := glassnode.MarketRequest{
+		Client:   s.Client,
+		Asset:    asset,
+		Since:    since,
+		Interval: glassnode.Interval24h,
+		Metric:   "marketcap_usd",
+	}
+
+	resp, err := req.Do(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	return resp.Last().Value, nil
+
+}
+
+func (s *Strategy) getTargetWeights(ctx context.Context) (weights types.Float64Slice, err error) {
 	// get market cap values
-	for _, currencies := range s.TargetCurrencies {
-		marketCap, err := s.glassnode.GetMarketCapInUSD(ctx, currencies)
+	for _, currency := range s.TargetCurrencies {
+		marketCap, err := s.GetMarketCapInUSD(ctx, currency)
 		if err != nil {
 			return nil, err
 		}
@@ -143,8 +168,7 @@ func (s *Strategy) getPrices(ctx context.Context, session *bbgo.ExchangeSession)
 	return prices, nil
 }
 
-func (s *Strategy) getQuantities(balances types.BalanceMap) types.Float64Slice {
-	var quantities types.Float64Slice
+func (s *Strategy) getQuantities(balances types.BalanceMap) (quantities types.Float64Slice) {
 	for _, currency := range s.TargetCurrencies {
 		if s.IgnoreLocked {
 			quantities = append(quantities, balances[currency].Total().Float64())
@@ -213,8 +237,7 @@ func (s *Strategy) generateSubmitOrders(prices, marketValues, targetWeights type
 	return submitOrders
 }
 
-func (s *Strategy) getSymbols() []string {
-	var symbols []string
+func (s *Strategy) getSymbols() (symbols []string) {
 	for _, currency := range s.TargetCurrencies {
 		symbol := currency + s.BaseCurrency
 		symbols = append(symbols, symbol)

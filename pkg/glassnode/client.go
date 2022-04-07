@@ -7,6 +7,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"os"
 	"time"
 
 	"github.com/c9s/requestgen"
@@ -34,6 +35,15 @@ func NewClient() *RestClient {
 			Timeout: defaultHTTPTimeout,
 		},
 	}
+
+	return client
+}
+
+func NewClientFromEnv() *RestClient {
+	apiKey := os.Getenv("GLASSNODE_API_KEY")
+
+	client := NewClient()
+	client.Auth(apiKey)
 
 	return client
 }
