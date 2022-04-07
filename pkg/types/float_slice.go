@@ -1,6 +1,10 @@
 package types
 
-import "math"
+import (
+	"math"
+
+	"github.com/c9s/bbgo/pkg/fixedpoint"
+)
 
 type Float64Slice []float64
 
@@ -116,4 +120,23 @@ func (s Float64Slice) ElementwiseProduct(other Float64Slice) Float64Slice {
 
 func (s Float64Slice) Dot(other Float64Slice) float64 {
 	return s.ElementwiseProduct(other).Sum()
+}
+
+func (s Float64Slice) Normalize() Float64Slice {
+	var values Float64Slice
+
+	sum := s.Sum()
+
+	for _, v := range s {
+		values = append(values, v/sum)
+	}
+
+	return values
+}
+
+func (s Float64Slice) ToFixedpoint() (o []fixedpoint.Value) {
+	for _, v := range s {
+		o = append(o, fixedpoint.NewFromFloat(v))
+	}
+	return o
 }
