@@ -4,13 +4,12 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"time"
+	"os"
 
 	"github.com/sirupsen/logrus"
 
 	"github.com/c9s/bbgo/pkg/bbgo"
 	"github.com/c9s/bbgo/pkg/fixedpoint"
-	"github.com/c9s/bbgo/pkg/glassnode"
 	"github.com/c9s/bbgo/pkg/types"
 )
 
@@ -24,7 +23,7 @@ func init() {
 
 type Strategy struct {
 	Notifiability *bbgo.Notifiability
-	Client        *glassnode.RestClient
+	glassnode     *Glassnode
 
 	Interval         types.Interval   `json:"interval"`
 	BaseCurrency     string           `json:"baseCurrency"`
@@ -38,7 +37,8 @@ type Strategy struct {
 }
 
 func (s *Strategy) Initialize() error {
-	s.Client = glassnode.NewClientFromEnv()
+	apiKey := os.Getenv("GLASSNODE_API_KEY")
+	s.glassnode = NewGlassnode(apiKey)
 	return nil
 }
 
@@ -85,31 +85,10 @@ func (s *Strategy) Run(ctx context.Context, orderExecutor bbgo.OrderExecutor, se
 	return nil
 }
 
-func (s *Strategy) GetMarketCapInUSD(ctx context.Context, asset string) (float64, error) {
-	// 24 hours and 30 minutes ago
-	since := time.Now().Add(-24*time.Hour - 30*time.Minute).Unix()
-
-	req := glassnode.MarketRequest{
-		Client:   s.Client,
-		Asset:    asset,
-		Since:    since,
-		Interval: glassnode.Interval24h,
-		Metric:   "marketcap_usd",
-	}
-
-	resp, err := req.Do(ctx)
-	if err != nil {
-		return 0, err
-	}
-
-	return resp.Last().Value, nil
-
-}
-
 func (s *Strategy) getTargetWeights(ctx context.Context) (weights types.Float64Slice, err error) {
 	// get market cap values
 	for _, currency := range s.TargetCurrencies {
-		marketCap, err := s.GetMarketCapInUSD(ctx, currency)
+		marketCap, err := s.glassnode.GetMarketCapInUSD(ctx, currency)
 		if err != nil {
 			return nil, err
 		}

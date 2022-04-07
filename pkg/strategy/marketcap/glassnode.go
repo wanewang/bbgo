@@ -2,7 +2,6 @@ package marketcap
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"github.com/c9s/bbgo/pkg/glassnode"
@@ -12,10 +11,8 @@ type Glassnode struct {
 	Client *glassnode.RestClient
 }
 
-func NewGlassnode() *Glassnode {
+func NewGlassnode(apiKey string) *Glassnode {
 	client := glassnode.NewClient()
-
-	apiKey := os.Getenv("GLASSNODE_API_KEY")
 	client.Auth(apiKey)
 
 	return &Glassnode{Client: client}
