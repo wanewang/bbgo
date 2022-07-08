@@ -117,6 +117,8 @@ type Strategy struct {
 
 	LowerBBRatio fixedpoint.Value `json:"lowerBBRatio"`
 
+	SellAboveNeutralSMA bool `json:"sellAboveNeutralSMA"`
+
 	// NeutralBollinger is the smaller range of the bollinger band
 	// If price is in this band, it usually means the price is oscillating.
 	// If price goes out of this band, we tend to not place sell orders or buy orders
@@ -403,6 +405,10 @@ func (s *Strategy) placeOrders(ctx context.Context, midPrice fixedpoint.Value, k
 	}
 
 	if s.hasLongSet() && base.Sub(sellOrder.Quantity).Sign() < 0 {
+		canSell = false
+	}
+
+	if s.SellAboveNeutralSMA && midPrice.Float64() < s.neutralBoll.LastSMA() {
 		canSell = false
 	}
 
