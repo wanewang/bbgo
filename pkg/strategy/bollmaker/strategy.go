@@ -113,6 +113,10 @@ type Strategy struct {
 	// BuyBelowNeutralSMA if true, the market maker will only place buy order when the current price is below the neutral band SMA.
 	BuyBelowNeutralSMA bool `json:"buyBelowNeutralSMA"`
 
+	BuyBelowMiddleBB bool `json:"buyBelowMiddleBB"`
+
+	LowerBBRatio fixedpoint.Value `json:"lowerBBRatio"`
+
 	// NeutralBollinger is the smaller range of the bollinger band
 	// If price is in this band, it usually means the price is oscillating.
 	// If price goes out of this band, we tend to not place sell orders or buy orders
@@ -404,6 +408,18 @@ func (s *Strategy) placeOrders(ctx context.Context, midPrice fixedpoint.Value, k
 
 	if s.BuyBelowNeutralSMA && midPrice.Float64() > s.neutralBoll.LastSMA() {
 		canBuy = false
+	}
+
+	if s.BuyBelowMiddleBB {
+		ndownBand := s.neutralBoll.LastDownBand()
+		nupBand := s.neutralBoll.LastUpBand()
+		nsma := s.neutralBoll.LastSMA()
+		nbandPercentage := calculateBandPercentage(nupBand, ndownBand, nsma, midPrice.Float64())
+		if nbandPercentage >= 0 {
+			canBuy = false
+		} else if 1 + nbandPercentage > s.LowerBBRatio.Float64() {
+			canBuy = false
+		}
 	}
 
 	if canSell {
