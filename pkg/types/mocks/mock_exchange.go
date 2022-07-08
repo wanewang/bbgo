@@ -8,7 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	types "github.com/c9s/bbgo/pkg/types"
+	types "github.com/wanewang/bbgo/pkg/types"
 	gomock "github.com/golang/mock/gomock"
 )
 

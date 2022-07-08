@@ -1,7 +1,7 @@
 package indicator
 
 import (
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 // Refer: Zero Lag Exponential Moving Average

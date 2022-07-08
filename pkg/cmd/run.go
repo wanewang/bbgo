@@ -14,10 +14,10 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
-	"github.com/c9s/bbgo/pkg/bbgo"
-	"github.com/c9s/bbgo/pkg/cmd/cmdutil"
-	"github.com/c9s/bbgo/pkg/grpc"
-	"github.com/c9s/bbgo/pkg/server"
+	"github.com/wanewang/bbgo/pkg/bbgo"
+	"github.com/wanewang/bbgo/pkg/cmd/cmdutil"
+	"github.com/wanewang/bbgo/pkg/grpc"
+	"github.com/wanewang/bbgo/pkg/server"
 )
 
 func init() {

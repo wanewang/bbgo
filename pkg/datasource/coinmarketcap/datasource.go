@@ -1,6 +1,6 @@
 package coinmarketcap
 
-import v1 "github.com/c9s/bbgo/pkg/datasource/coinmarketcap/v1"
+import v1 "github.com/wanewang/bbgo/pkg/datasource/coinmarketcap/v1"
 
 type DataSource struct {
 	client *v1.RestClient

@@ -8,10 +8,10 @@ import (
 	"github.com/fatih/color"
 	"github.com/slack-go/slack"
 
-	"github.com/c9s/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
 
-	"github.com/c9s/bbgo/pkg/slack/slackstyle"
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/slack/slackstyle"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 type AverageCostPnlReport struct {

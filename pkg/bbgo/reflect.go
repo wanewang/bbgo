@@ -3,7 +3,7 @@ package bbgo
 import (
 	"reflect"
 
-	"github.com/c9s/bbgo/pkg/dynamic"
+	"github.com/wanewang/bbgo/pkg/dynamic"
 )
 
 type InstanceIDProvider interface {

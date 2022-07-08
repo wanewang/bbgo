@@ -4,7 +4,7 @@ import "math/big"
 
 import "github.com/leekchan/accounting"
 
-import "github.com/c9s/bbgo/pkg/fixedpoint"
+import "github.com/wanewang/bbgo/pkg/fixedpoint"
 
 type Acc = accounting.Accounting
 

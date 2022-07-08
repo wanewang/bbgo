@@ -3,7 +3,7 @@ package bbgo
 import (
 	"sync"
 
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 type TradeStore struct {

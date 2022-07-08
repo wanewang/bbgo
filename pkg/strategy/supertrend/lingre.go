@@ -1,9 +1,9 @@
 package supertrend
 
 import (
-	"github.com/c9s/bbgo/pkg/bbgo"
-	"github.com/c9s/bbgo/pkg/indicator"
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/bbgo"
+	"github.com/wanewang/bbgo/pkg/indicator"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 // LinGre is Linear Regression baseline

@@ -9,9 +9,9 @@ import (
 
 	"github.com/c9s/requestgen"
 
-	maxapi "github.com/c9s/bbgo/pkg/exchange/max/maxapi"
-	"github.com/c9s/bbgo/pkg/fixedpoint"
-	"github.com/c9s/bbgo/pkg/types"
+	maxapi "github.com/wanewang/bbgo/pkg/exchange/max/maxapi"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 type MarginService struct {

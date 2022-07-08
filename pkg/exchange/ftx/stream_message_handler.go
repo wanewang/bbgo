@@ -3,7 +3,7 @@ package ftx
 import (
 	"encoding/json"
 
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 type messageHandler struct {

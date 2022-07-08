@@ -8,8 +8,8 @@ import (
 
 	"go.uber.org/multierr"
 
-	"github.com/c9s/bbgo/pkg/data/tsv"
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/data/tsv"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 type Instance interface {

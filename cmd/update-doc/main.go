@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/c9s/bbgo/pkg/cmd"
+	"github.com/wanewang/bbgo/pkg/cmd"
 	"github.com/spf13/cobra/doc"
 	"log"
 	"path"

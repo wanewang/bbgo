@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/c9s/bbgo/pkg/util"
+	"github.com/wanewang/bbgo/pkg/util"
 )
 
 func Test_toErrorResponse(t *testing.T) {

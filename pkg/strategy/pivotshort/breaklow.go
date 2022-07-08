@@ -3,10 +3,10 @@ package pivotshort
 import (
 	"context"
 
-	"github.com/c9s/bbgo/pkg/bbgo"
-	"github.com/c9s/bbgo/pkg/fixedpoint"
-	"github.com/c9s/bbgo/pkg/indicator"
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/bbgo"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/indicator"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 // BreakLow -- when price breaks the previous pivot low, we set a trade entry

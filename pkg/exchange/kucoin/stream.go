@@ -7,11 +7,11 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 
-	"github.com/c9s/bbgo/pkg/depth"
-	"github.com/c9s/bbgo/pkg/exchange/kucoin/kucoinapi"
-	"github.com/c9s/bbgo/pkg/fixedpoint"
-	"github.com/c9s/bbgo/pkg/types"
-	"github.com/c9s/bbgo/pkg/util"
+	"github.com/wanewang/bbgo/pkg/depth"
+	"github.com/wanewang/bbgo/pkg/exchange/kucoin/kucoinapi"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/util"
 )
 
 const readTimeout = 30 * time.Second

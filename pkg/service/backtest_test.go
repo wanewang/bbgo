@@ -10,8 +10,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/c9s/bbgo/pkg/exchange"
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/exchange"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 func TestBacktestService_FindMissingTimeRanges_EmptyData(t *testing.T) {

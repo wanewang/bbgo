@@ -5,7 +5,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 var logst = logrus.WithField("indicator", "supertrend")

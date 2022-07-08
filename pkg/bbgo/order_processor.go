@@ -1,7 +1,7 @@
 package bbgo
 
 import (
-	"github.com/c9s/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
 	"github.com/pkg/errors"
 )
 

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/c9s/bbgo/pkg/util"
+	"github.com/wanewang/bbgo/pkg/util"
 )
 
 var numOfDigitsOfUnixTimestamp = len(strconv.FormatInt(time.Now().Unix(), 10))

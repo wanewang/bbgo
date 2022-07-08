@@ -10,9 +10,9 @@ import (
 
 	"github.com/valyala/fastjson"
 
-	"github.com/c9s/bbgo/pkg/exchange/okex/okexapi"
-	"github.com/c9s/bbgo/pkg/fixedpoint"
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/exchange/okex/okexapi"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 func parseWebSocketEvent(str []byte) (interface{}, error) {

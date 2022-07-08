@@ -3,7 +3,7 @@ package types
 import (
 	"gopkg.in/yaml.v3"
 
-	"github.com/c9s/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
 )
 
 // TODO: Add more stats from the reference:

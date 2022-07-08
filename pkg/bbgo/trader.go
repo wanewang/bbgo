@@ -10,8 +10,8 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 
-	"github.com/c9s/bbgo/pkg/dynamic"
-	"github.com/c9s/bbgo/pkg/interact"
+	"github.com/wanewang/bbgo/pkg/dynamic"
+	"github.com/wanewang/bbgo/pkg/interact"
 )
 
 type StrategyID interface {

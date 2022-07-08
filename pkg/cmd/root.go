@@ -18,7 +18,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/x-cray/logrus-prefixed-formatter"
 
-	"github.com/c9s/bbgo/pkg/bbgo"
+	"github.com/wanewang/bbgo/pkg/bbgo"
 
 	_ "github.com/go-sql-driver/mysql"
 )
