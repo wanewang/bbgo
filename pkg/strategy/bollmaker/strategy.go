@@ -410,6 +410,7 @@ func (s *Strategy) placeOrders(ctx context.Context, midPrice fixedpoint.Value, k
 
 	if s.SellAboveNeutralSMA && midPrice.Float64() < s.neutralBoll.LastSMA() {
 		canSell = false
+		log.Infof("%s sellAboveNeutralSMA is enabled, ignore sell order below sma", s.Symbol);
 	}
 
 	if s.BuyBelowNeutralSMA && midPrice.Float64() > s.neutralBoll.LastSMA() {
@@ -420,11 +421,12 @@ func (s *Strategy) placeOrders(ctx context.Context, midPrice fixedpoint.Value, k
 		ndownBand := s.neutralBoll.LastDownBand()
 		nupBand := s.neutralBoll.LastUpBand()
 		nsma := s.neutralBoll.LastSMA()
-		nbandPercentage := calculateBandPercentage(nupBand, ndownBand, nsma, midPrice.Float64())
-		if nbandPercentage >= 0 {
+		nbandPercentage := 1 + calculateBandPercentage(nupBand, ndownBand, nsma, midPrice.Float64())
+		if nbandPercentage >= 1 {
 			canBuy = false
-		} else if 1 + nbandPercentage > s.LowerBBRatio.Float64() {
+		} else if nbandPercentage > s.LowerBBRatio.Float64() {
 			canBuy = false
+			log.Infof("%s buyBelowMiddleBB is enabled, set ratio %v, current %v", s.Symbol, s.LowerBBRatio, nbandPercentage)
 		}
 	}
 
