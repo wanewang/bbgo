@@ -117,6 +117,9 @@ type Strategy struct {
 
 	LowerBBRatio fixedpoint.Value `json:"lowerBBRatio"`
 
+	BuyBelowSTOCH   bool             `json:"buyBelowSTOCH"`
+	LowerSTOCHLimit fixedpoint.Value `json:"lowerSTOCHLimit"`
+
 	SellAboveNeutralSMA bool `json:"sellAboveNeutralSMA"`
 
 	// NeutralBollinger is the smaller range of the bollinger band
@@ -168,6 +171,8 @@ type Strategy struct {
 
 	// neutralBoll is the neutral price section
 	neutralBoll *indicator.BOLL
+
+	stoch *indicator.STOCH
 
 	// StrategyController
 	bbgo.StrategyController
@@ -408,16 +413,16 @@ func (s *Strategy) placeOrders(ctx context.Context, midPrice fixedpoint.Value, k
 		canSell = false
 	}
 
-	if s.SellAboveNeutralSMA && midPrice.Float64() < s.neutralBoll.LastSMA() {
+	if canSell && s.SellAboveNeutralSMA && midPrice.Float64() < s.neutralBoll.LastSMA() {
 		canSell = false
-		log.Infof("%s sellAboveNeutralSMA is enabled, ignore sell order below sma", s.Symbol);
+		log.Infof("%s sellAboveNeutralSMA is enabled, ignore sell order below sma", s.Symbol)
 	}
 
 	if s.BuyBelowNeutralSMA && midPrice.Float64() > s.neutralBoll.LastSMA() {
 		canBuy = false
 	}
 
-	if s.BuyBelowMiddleBB {
+	if canBuy && s.BuyBelowMiddleBB {
 		ndownBand := s.neutralBoll.LastDownBand()
 		nupBand := s.neutralBoll.LastUpBand()
 		nsma := s.neutralBoll.LastSMA()
@@ -430,10 +435,20 @@ func (s *Strategy) placeOrders(ctx context.Context, midPrice fixedpoint.Value, k
 		}
 	}
 
+	if canBuy && s.BuyBelowSTOCH {
+		lastD := s.stoch.LastD()
+		if lastD > s.LowerSTOCHLimit.Float64() {
+			canBuy = false
+			log.Infof("%s buyBelowSTOCH is enabled, set limit %v, current %v", s.Symbol, s.LowerSTOCHLimit, lastD)
+		}
+	}
+
 	if canSell {
 		submitOrders = append(submitOrders, sellOrder)
+		// log.Info("%s can Sell %v", s.Symbol, sellOrder)
 	}
 	if canBuy {
+		// log.Info("%s can Buy %v", s.Symbol, buyOrder)
 		submitOrders = append(submitOrders, buyOrder)
 	}
 
@@ -510,6 +525,7 @@ func (s *Strategy) Run(ctx context.Context, orderExecutor bbgo.OrderExecutor, se
 
 	s.neutralBoll = s.StandardIndicatorSet.BOLL(s.NeutralBollinger.IntervalWindow, s.NeutralBollinger.BandWidth)
 	s.defaultBoll = s.StandardIndicatorSet.BOLL(s.DefaultBollinger.IntervalWindow, s.DefaultBollinger.BandWidth)
+	s.stoch = s.StandardIndicatorSet.STOCH(s.NeutralBollinger.IntervalWindow)
 
 	// calculate group id for orders
 	instanceID := s.InstanceID()
