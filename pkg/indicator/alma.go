@@ -15,8 +15,8 @@ import (
 type ALMA struct {
 	types.SeriesBase
 	types.IntervalWindow         // required
-	Offset               float64 // required: recommend to be 5
-	Sigma                int     // required: recommend to be 0.5
+	Offset               float64 // required: recommend to be 0.5
+	Sigma                int     // required: recommend to be 5
 	weight               []float64
 	sum                  float64
 	input                []float64
@@ -75,7 +75,7 @@ func (inc *ALMA) Length() int {
 
 var _ types.SeriesExtend = &ALMA{}
 
-func (inc *ALMA) calculateAndUpdate(allKLines []types.KLine) {
+func (inc *ALMA) CalculateAndUpdate(allKLines []types.KLine) {
 	if inc.input == nil {
 		for _, k := range allKLines {
 			inc.Update(k.Close.Float64())
@@ -91,7 +91,7 @@ func (inc *ALMA) handleKLineWindowUpdate(interval types.Interval, window types.K
 	if inc.Interval != interval {
 		return
 	}
-	inc.calculateAndUpdate(window)
+	inc.CalculateAndUpdate(window)
 }
 
 func (inc *ALMA) Bind(updater KLineWindowUpdater) {

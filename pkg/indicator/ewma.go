@@ -1,12 +1,9 @@
 package indicator
 
 import (
-	"math"
 	"time"
 
-	log "github.com/sirupsen/logrus"
-
-	"github.com/wanewang/bbgo/pkg/types"
+	"github.com/c9s/bbgo/pkg/types"
 )
 
 // These numbers should be aligned with bbgo MaxNumOfKLines and MaxNumOfKLinesTruncate
@@ -17,10 +14,28 @@ const MaxNumOfEWMATruncateSize = 100
 type EWMA struct {
 	types.IntervalWindow
 	types.SeriesBase
-	Values       types.Float64Slice
-	LastOpenTime time.Time
 
-	UpdateCallbacks []func(value float64)
+	Values  types.Float64Slice
+	EndTime time.Time
+
+	updateCallbacks []func(value float64)
+}
+
+var _ types.SeriesExtend = &EWMA{}
+
+func (inc *EWMA) Clone() *EWMA {
+	out := &EWMA{
+		IntervalWindow: inc.IntervalWindow,
+		Values:         inc.Values[:],
+	}
+	out.SeriesBase.Series = out
+	return out
+}
+
+func (inc *EWMA) TestUpdate(value float64) *EWMA {
+	out := inc.Clone()
+	out.Update(value)
+	return out
 }
 
 func (inc *EWMA) Update(value float64) {
@@ -58,57 +73,14 @@ func (inc *EWMA) Length() int {
 	return len(inc.Values)
 }
 
-func (inc *EWMA) calculateAndUpdate(allKLines []types.KLine) {
-	if len(allKLines) < inc.Window {
-		// we can't calculate
+func (inc *EWMA) PushK(k types.KLine) {
+	if inc.EndTime != zeroTime && k.EndTime.Before(inc.EndTime) {
 		return
 	}
 
-	var priceF = KLineClosePriceMapper
-	var dataLen = len(allKLines)
-	var multiplier = 2.0 / (float64(inc.Window) + 1)
-
-	// init the values fromNthK the kline data
-	var fromNthK = 1
-	if len(inc.Values) == 0 {
-		// for the first value, we should use the close price
-		inc.Values = []float64{priceF(allKLines[0])}
-	} else {
-		if len(inc.Values) >= MaxNumOfEWMA {
-			inc.Values = inc.Values[MaxNumOfEWMATruncateSize-1:]
-		}
-
-		fromNthK = len(inc.Values)
-
-		// update ewma with the existing values
-		for i := dataLen - 1; i > 0; i-- {
-			var k = allKLines[i]
-			if k.StartTime.After(inc.LastOpenTime) {
-				fromNthK = i
-			} else {
-				break
-			}
-		}
-	}
-
-	for i := fromNthK; i < dataLen; i++ {
-		var k = allKLines[i]
-		var ewma = priceF(k)*multiplier + (1-multiplier)*inc.Values[i-1]
-		inc.Values.Push(ewma)
-		inc.LastOpenTime = k.StartTime.Time()
-		inc.EmitUpdate(ewma)
-	}
-
-	if len(inc.Values) != dataLen {
-		// check error
-		log.Warnf("%s EMA (%d) value length (%d) != kline window length (%d)", inc.Interval, inc.Window, len(inc.Values), dataLen)
-	}
-
-	v1 := math.Floor(inc.Values[len(inc.Values)-1]*100.0) / 100.0
-	v2 := math.Floor(CalculateKLinesEMA(allKLines, priceF, inc.Window)*100.0) / 100.0
-	if v1 != v2 {
-		log.Warnf("ACCUMULATED %s EMA (%d) %f != EMA %f", inc.Interval, inc.Window, v1, v2)
-	}
+	inc.Update(k.Close.Float64())
+	inc.EndTime = k.EndTime.Time()
+	inc.EmitUpdate(inc.Last())
 }
 
 func CalculateKLinesEMA(allKLines []types.KLine, priceF KLinePriceMapper, window int) float64 {
@@ -125,17 +97,3 @@ func ewma(prices []float64, multiplier float64) float64 {
 
 	return prices[end]*multiplier + (1-multiplier)*ewma(prices[:end], multiplier)
 }
-
-func (inc *EWMA) handleKLineWindowUpdate(interval types.Interval, window types.KLineWindow) {
-	if inc.Interval != interval {
-		return
-	}
-
-	inc.calculateAndUpdate(window)
-}
-
-func (inc *EWMA) Bind(updater KLineWindowUpdater) {
-	updater.OnKLineWindowUpdate(inc.handleKLineWindowUpdate)
-}
-
-var _ types.SeriesExtend = &EWMA{}

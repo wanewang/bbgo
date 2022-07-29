@@ -12,18 +12,19 @@ const defaultVolumeFactor = 0.7
 type TILL struct {
 	types.SeriesBase
 	types.IntervalWindow
-	VolumeFactor    float64
-	e1              *EWMA
-	e2              *EWMA
-	e3              *EWMA
-	e4              *EWMA
-	e5              *EWMA
-	e6              *EWMA
-	c1              float64
-	c2              float64
-	c3              float64
-	c4              float64
-	UpdateCallbacks []func(value float64)
+	VolumeFactor float64
+	e1           *EWMA
+	e2           *EWMA
+	e3           *EWMA
+	e4           *EWMA
+	e5           *EWMA
+	e6           *EWMA
+	c1           float64
+	c2           float64
+	c3           float64
+	c4           float64
+
+	updateCallbacks []func(value float64)
 }
 
 func (inc *TILL) Update(value float64) {
@@ -85,20 +86,36 @@ func (inc *TILL) Length() int {
 
 var _ types.Series = &TILL{}
 
-func (inc *TILL) calculateAndUpdate(allKLines []types.KLine) {
-	doable := false
-	if inc.e1 == nil {
-		doable = true
+func (inc *TILL) PushK(k types.KLine) {
+	if inc.e1 != nil && inc.e1.EndTime != zeroTime && k.EndTime.Before(inc.e1.EndTime) {
+		return
 	}
+
+	inc.Update(k.Close.Float64())
+	inc.EmitUpdate(inc.Last())
+}
+
+func (inc *TILL) LoadK(allKLines []types.KLine) {
 	for _, k := range allKLines {
-		if !doable && k.StartTime.After(inc.e1.LastOpenTime) {
-			doable = true
-		}
-		if doable {
-			inc.Update(k.Close.Float64())
-			inc.EmitUpdate(inc.Last())
-		}
+		inc.PushK(k)
 	}
+}
+
+func (inc *TILL) BindK(target KLineClosedEmitter, symbol string, interval types.Interval) {
+	target.OnKLineClosed(types.KLineWith(symbol, interval, inc.PushK))
+}
+
+func (inc *TILL) CalculateAndUpdate(allKLines []types.KLine) {
+	if inc.e1 == nil {
+		for _, k := range allKLines {
+			inc.PushK(k)
+		}
+	} else {
+		end := len(allKLines)
+		last := allKLines[end-1]
+		inc.PushK(last)
+	}
+
 }
 
 func (inc *TILL) handleKLineWindowUpdate(interval types.Interval, window types.KLineWindow) {
@@ -106,7 +123,7 @@ func (inc *TILL) handleKLineWindowUpdate(interval types.Interval, window types.K
 		return
 	}
 
-	inc.calculateAndUpdate(window)
+	inc.CalculateAndUpdate(window)
 }
 
 func (inc *TILL) Bind(updater KLineWindowUpdater) {

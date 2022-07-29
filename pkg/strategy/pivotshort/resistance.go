@@ -3,10 +3,11 @@ package pivotshort
 import (
 	"context"
 
-	"github.com/wanewang/bbgo/pkg/bbgo"
-	"github.com/wanewang/bbgo/pkg/fixedpoint"
-	"github.com/wanewang/bbgo/pkg/indicator"
-	"github.com/wanewang/bbgo/pkg/types"
+	"github.com/c9s/bbgo/pkg/bbgo"
+	"github.com/c9s/bbgo/pkg/fixedpoint"
+	"github.com/c9s/bbgo/pkg/indicator"
+	"github.com/c9s/bbgo/pkg/risk"
+	"github.com/c9s/bbgo/pkg/types"
 )
 
 type ResistanceShort struct {
@@ -21,65 +22,76 @@ type ResistanceShort struct {
 	NumLayers     int              `json:"numLayers"`
 	LayerSpread   fixedpoint.Value `json:"layerSpread"`
 	Quantity      fixedpoint.Value `json:"quantity"`
+	Leverage      fixedpoint.Value `json:"leverage"`
 	Ratio         fixedpoint.Value `json:"ratio"`
+
+	TrendEMA *TrendEMA `json:"trendEMA"`
 
 	session       *bbgo.ExchangeSession
 	orderExecutor *bbgo.GeneralOrderExecutor
 
-	resistancePivot        *indicator.Pivot
+	resistancePivot        *indicator.PivotLow
 	resistancePrices       []float64
 	currentResistancePrice fixedpoint.Value
 
 	activeOrders *bbgo.ActiveOrderBook
 }
 
-func (s *ResistanceShort) Bind(session *bbgo.ExchangeSession, orderExecutor *bbgo.GeneralOrderExecutor) {
-	s.session = session
-	s.orderExecutor = orderExecutor
-	s.activeOrders = bbgo.NewActiveOrderBook(s.Symbol)
-	s.activeOrders.BindStream(session.UserDataStream)
+func (s *ResistanceShort) Subscribe(session *bbgo.ExchangeSession) {
+	if s.TrendEMA != nil {
+		session.Subscribe(types.KLineChannel, s.Symbol, types.SubscribeOptions{Interval: s.TrendEMA.Interval})
+	}
+}
 
+func (s *ResistanceShort) Bind(session *bbgo.ExchangeSession, orderExecutor *bbgo.GeneralOrderExecutor) {
 	if s.GroupDistance.IsZero() {
 		s.GroupDistance = fixedpoint.NewFromFloat(0.01)
 	}
 
-	store, _ := session.MarketDataStore(s.Symbol)
+	s.session = session
+	s.orderExecutor = orderExecutor
+	s.activeOrders = bbgo.NewActiveOrderBook(s.Symbol)
+	s.activeOrders.OnFilled(func(o types.Order) {
+		// reset resistance price
+		s.currentResistancePrice = fixedpoint.Zero
+	})
+	s.activeOrders.BindStream(session.UserDataStream)
 
-	s.resistancePivot = &indicator.Pivot{IntervalWindow: s.IntervalWindow}
-	s.resistancePivot.Bind(store)
-
-	// preload history kline data to the resistance pivot indicator
-	// we use the last kline to find the higher lows
-	lastKLine := preloadPivot(s.resistancePivot, store)
-
-	// use the last kline from the history before we get the next closed kline
-	if lastKLine != nil {
-		s.findNextResistancePriceAndPlaceOrders(lastKLine.Close)
+	if s.TrendEMA != nil {
+		if s.TrendEMA.MaxGradient == 0.0 {
+			s.TrendEMA.MaxGradient = 1.0
+		}
+		s.TrendEMA.Bind(session, orderExecutor)
 	}
 
+	s.resistancePivot = session.StandardIndicatorSet(s.Symbol).PivotLow(s.IntervalWindow)
+
+	// use the last kline from the history before we get the next closed kline
+	s.updateResistanceOrders(fixedpoint.NewFromFloat(s.resistancePivot.Last()))
+
 	session.MarketDataStream.OnKLineClosed(types.KLineWith(s.Symbol, s.Interval, func(kline types.KLine) {
+		// trend EMA protection
+		if s.TrendEMA != nil && !s.TrendEMA.GradientAllowed() {
+			return
+		}
+
 		position := s.orderExecutor.Position()
 		if position.IsOpened(kline.Close) {
 			return
 		}
 
-		s.findNextResistancePriceAndPlaceOrders(kline.Close)
+		s.updateResistanceOrders(kline.Close)
 	}))
 }
 
-func tail(arr []float64, length int) []float64 {
-	if len(arr) < length {
-		return arr
-	}
-
-	return arr[len(arr)-1-length:]
-}
-
-func (s *ResistanceShort) updateNextResistancePrice(closePrice fixedpoint.Value) bool {
+// updateCurrentResistancePrice updates the current resistance price
+// we should only update the resistance price when:
+// 1) the close price is already above the current resistance price by (1 + minDistance)
+// 2) the next resistance price is lower than the current resistance price.
+func (s *ResistanceShort) updateCurrentResistancePrice(closePrice fixedpoint.Value) bool {
 	minDistance := s.MinDistance.Float64()
 	groupDistance := s.GroupDistance.Float64()
-	resistancePrices := findPossibleResistancePrices(closePrice.Float64()*(1.0+minDistance), groupDistance, tail(s.resistancePivot.Lows, 6))
-
+	resistancePrices := findPossibleResistancePrices(closePrice.Float64()*(1.0+minDistance), groupDistance, s.resistancePivot.Values.Tail(6))
 	if len(resistancePrices) == 0 {
 		return false
 	}
@@ -88,9 +100,6 @@ func (s *ResistanceShort) updateNextResistancePrice(closePrice fixedpoint.Value)
 
 	nextResistancePrice := fixedpoint.NewFromFloat(resistancePrices[0])
 
-	// if currentResistancePrice is not set or the close price is already higher than the current resistance price,
-	// we should update the resistance price
-	// if the detected resistance price is lower than the current one, we should also update it too
 	if s.currentResistancePrice.IsZero() {
 		s.currentResistancePrice = nextResistancePrice
 		return true
@@ -99,9 +108,8 @@ func (s *ResistanceShort) updateNextResistancePrice(closePrice fixedpoint.Value)
 	// if the current sell price is out-dated
 	// or
 	// the next resistance is lower than the current one.
-	currentSellPrice := s.currentResistancePrice.Mul(one.Add(s.Ratio))
-	if closePrice.Compare(currentSellPrice) > 0 ||
-		nextResistancePrice.Compare(currentSellPrice) < 0 {
+	minPriceToUpdate := s.currentResistancePrice.Mul(one.Add(s.MinDistance))
+	if closePrice.Compare(minPriceToUpdate) > 0 || nextResistancePrice.Compare(s.currentResistancePrice) < 0 {
 		s.currentResistancePrice = nextResistancePrice
 		return true
 	}
@@ -109,20 +117,28 @@ func (s *ResistanceShort) updateNextResistancePrice(closePrice fixedpoint.Value)
 	return false
 }
 
-func (s *ResistanceShort) findNextResistancePriceAndPlaceOrders(closePrice fixedpoint.Value) {
+func (s *ResistanceShort) updateResistanceOrders(closePrice fixedpoint.Value) {
 	ctx := context.Background()
-	resistanceUpdated := s.updateNextResistancePrice(closePrice)
+	resistanceUpdated := s.updateCurrentResistancePrice(closePrice)
 	if resistanceUpdated {
-		bbgo.Notify("Found next resistance price: %f, updating resistance order...", s.currentResistancePrice.Float64())
+		s.placeResistanceOrders(ctx, s.currentResistancePrice)
+	} else if s.activeOrders.NumOfOrders() == 0 && !s.currentResistancePrice.IsZero() {
 		s.placeResistanceOrders(ctx, s.currentResistancePrice)
 	}
 }
 
 func (s *ResistanceShort) placeResistanceOrders(ctx context.Context, resistancePrice fixedpoint.Value) {
-	futuresMode := s.session.Futures || s.session.IsolatedFutures
-	_ = futuresMode
+	totalQuantity, err := risk.CalculateBaseQuantity(s.session, s.Market, resistancePrice, s.Quantity, s.Leverage)
+	if err != nil {
+		log.WithError(err).Errorf("quantity calculation error")
+	}
 
-	totalQuantity := s.Quantity
+	if totalQuantity.IsZero() {
+		return
+	}
+
+	bbgo.Notify("Next %s resistance price at %f, updating resistance orders with total quantity %f", s.Symbol, s.currentResistancePrice.Float64(), totalQuantity.Float64())
+
 	numLayers := s.NumLayers
 	if numLayers == 0 {
 		numLayers = 1
@@ -151,8 +167,7 @@ func (s *ResistanceShort) placeResistanceOrders(ctx context.Context, resistanceP
 
 		spread := layerSpread.Mul(fixedpoint.NewFromInt(int64(i)))
 		price := sellPriceStart.Mul(one.Add(spread))
-		log.Infof("price = %f", price.Float64())
-
+		log.Infof("resistance sell price = %f", price.Float64())
 		log.Infof("placing resistance short order #%d: price = %f, quantity = %f", i, price.Float64(), quantity.Float64())
 
 		orderForms = append(orderForms, types.SubmitOrder{
@@ -164,14 +179,6 @@ func (s *ResistanceShort) placeResistanceOrders(ctx context.Context, resistanceP
 			Tag:              "resistanceShort",
 			MarginSideEffect: types.SideEffectTypeMarginBuy,
 		})
-
-		// TODO: fix futures mode later
-		/*
-			if futuresMode {
-				if quantity.Mul(price).Compare(quoteBalance.Available) <= 0 {
-				}
-			}
-		*/
 	}
 
 	createdOrders, err := s.orderExecutor.SubmitOrders(ctx, orderForms...)

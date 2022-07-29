@@ -10,9 +10,10 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/wanewang/bbgo/pkg/exchange/batch"
-	"github.com/wanewang/bbgo/pkg/fixedpoint"
-	"github.com/wanewang/bbgo/pkg/types"
+	exchange2 "github.com/c9s/bbgo/pkg/exchange"
+	"github.com/c9s/bbgo/pkg/exchange/batch"
+	"github.com/c9s/bbgo/pkg/fixedpoint"
+	"github.com/c9s/bbgo/pkg/types"
 )
 
 // RewardService collects the reward records from the exchange,
@@ -29,7 +30,7 @@ func (s *RewardService) Sync(ctx context.Context, exchange types.Exchange, start
 		return ErrExchangeRewardServiceNotImplemented
 	}
 
-	isMargin, isFutures, _, _ := getExchangeAttributes(exchange)
+	isMargin, isFutures, _, _ := exchange2.GetSessionAttributes(exchange)
 	if isMargin || isFutures {
 		return nil
 	}

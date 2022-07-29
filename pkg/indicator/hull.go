@@ -16,8 +16,10 @@ type HULL struct {
 	ma2    *EWMA
 	result *EWMA
 
-	UpdateCallbacks []func(value float64)
+	updateCallbacks []func(value float64)
 }
+
+var _ types.SeriesExtend = &HULL{}
 
 func (inc *HULL) Update(value float64) {
 	if inc.result == nil {
@@ -52,33 +54,11 @@ func (inc *HULL) Length() int {
 	return inc.result.Length()
 }
 
-var _ types.SeriesExtend = &HULL{}
-
-// TODO: should we just ignore the possible overlapping?
-func (inc *HULL) calculateAndUpdate(allKLines []types.KLine) {
-	doable := false
-	if inc.ma1 == nil || inc.ma1.Length() == 0 {
-		doable = true
-	}
-	for _, k := range allKLines {
-		if !doable && k.StartTime.After(inc.ma1.LastOpenTime) {
-			doable = true
-		}
-		if doable {
-			inc.Update(k.Close.Float64())
-			inc.EmitUpdate(inc.Last())
-		}
-	}
-}
-
-func (inc *HULL) handleKLineWindowUpdate(interval types.Interval, window types.KLineWindow) {
-	if inc.Interval != interval {
+func (inc *HULL) PushK(k types.KLine) {
+	if inc.ma1 != nil && inc.ma1.Length() > 0 && k.EndTime.Before(inc.ma1.EndTime) {
 		return
 	}
 
-	inc.calculateAndUpdate(window)
-}
-
-func (inc *HULL) Bind(updater KLineWindowUpdater) {
-	updater.OnKLineWindowUpdate(inc.handleKLineWindowUpdate)
+	inc.Update(k.Close.Float64())
+	inc.EmitUpdate(inc.Last())
 }

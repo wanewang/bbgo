@@ -7,8 +7,9 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/wanewang/bbgo/pkg/exchange/batch"
-	"github.com/wanewang/bbgo/pkg/types"
+	"github.com/c9s/bbgo/pkg/exchange"
+	"github.com/c9s/bbgo/pkg/exchange/batch"
+	"github.com/c9s/bbgo/pkg/types"
 )
 
 type DepositService struct {
@@ -17,7 +18,7 @@ type DepositService struct {
 
 // Sync syncs the withdraw records into db
 func (s *DepositService) Sync(ctx context.Context, ex types.Exchange, startTime time.Time) error {
-	isMargin, isFutures, isIsolated, _ := getExchangeAttributes(ex)
+	isMargin, isFutures, isIsolated, _ := exchange.GetSessionAttributes(ex)
 	if isMargin || isFutures || isIsolated {
 		// only works in spot
 		return nil

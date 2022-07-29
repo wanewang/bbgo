@@ -18,6 +18,23 @@ type DEMA struct {
 	UpdateCallbacks []func(value float64)
 }
 
+func (inc *DEMA) Clone() *DEMA {
+	out := &DEMA{
+		IntervalWindow: inc.IntervalWindow,
+		Values:         inc.Values[:],
+		a1:             inc.a1.Clone(),
+		a2:             inc.a2.Clone(),
+	}
+	out.SeriesBase.Series = out
+	return out
+}
+
+func (inc *DEMA) TestUpdate(value float64) *DEMA {
+	out := inc.Clone()
+	out.Update(value)
+	return out
+}
+
 func (inc *DEMA) Update(value float64) {
 	if len(inc.Values) == 0 {
 		inc.SeriesBase.Series = inc
@@ -50,14 +67,20 @@ func (inc *DEMA) Length() int {
 
 var _ types.SeriesExtend = &DEMA{}
 
-func (inc *DEMA) calculateAndUpdate(allKLines []types.KLine) {
+func (inc *DEMA) PushK(k types.KLine) {
+	inc.Update(k.Close.Float64())
+}
+
+func (inc *DEMA) CalculateAndUpdate(allKLines []types.KLine) {
 	if inc.a1 == nil {
 		for _, k := range allKLines {
-			inc.Update(k.Close.Float64())
+			inc.PushK(k)
 			inc.EmitUpdate(inc.Last())
 		}
 	} else {
-		inc.Update(allKLines[len(allKLines)-1].Close.Float64())
+		// last k
+		k := allKLines[len(allKLines)-1]
+		inc.PushK(k)
 		inc.EmitUpdate(inc.Last())
 	}
 }
@@ -67,7 +90,7 @@ func (inc *DEMA) handleKLineWindowUpdate(interval types.Interval, window types.K
 		return
 	}
 
-	inc.calculateAndUpdate(window)
+	inc.CalculateAndUpdate(window)
 }
 
 func (inc *DEMA) Bind(updater KLineWindowUpdater) {

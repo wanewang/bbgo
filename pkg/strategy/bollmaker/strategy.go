@@ -6,15 +6,15 @@ import (
 	"math"
 	"sync"
 
-	"github.com/wanewang/bbgo/pkg/indicator"
-	"github.com/wanewang/bbgo/pkg/util"
+	"github.com/c9s/bbgo/pkg/indicator"
+	"github.com/c9s/bbgo/pkg/util"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
-	"github.com/wanewang/bbgo/pkg/bbgo"
-	"github.com/wanewang/bbgo/pkg/fixedpoint"
-	"github.com/wanewang/bbgo/pkg/types"
+	"github.com/c9s/bbgo/pkg/bbgo"
+	"github.com/c9s/bbgo/pkg/fixedpoint"
+	"github.com/c9s/bbgo/pkg/types"
 )
 
 // TODO:
@@ -22,8 +22,6 @@ import (
 // 2) add option for only placing buy orders when price is below the SMA line
 
 const ID = "bollmaker"
-
-const stateKey = "state-v1"
 
 var notionModifier = fixedpoint.NewFromFloat(1.1)
 var two = fixedpoint.NewFromInt(2)
@@ -58,8 +56,7 @@ type Strategy struct {
 	// Symbol is the market symbol you want to trade
 	Symbol string `json:"symbol"`
 
-	// Interval is how long do you want to update your order price and quantity
-	Interval types.Interval `json:"interval"`
+	types.IntervalWindow
 
 	bbgo.QuantityOrAmount
 
@@ -113,15 +110,6 @@ type Strategy struct {
 	// BuyBelowNeutralSMA if true, the market maker will only place buy order when the current price is below the neutral band SMA.
 	BuyBelowNeutralSMA bool `json:"buyBelowNeutralSMA"`
 
-	BuyBelowMiddleBB bool `json:"buyBelowMiddleBB"`
-
-	LowerBBRatio fixedpoint.Value `json:"lowerBBRatio"`
-
-	BuyBelowSTOCH   bool             `json:"buyBelowSTOCH"`
-	LowerSTOCHLimit fixedpoint.Value `json:"lowerSTOCHLimit"`
-
-	SellAboveNeutralSMA bool `json:"sellAboveNeutralSMA"`
-
 	// NeutralBollinger is the smaller range of the bollinger band
 	// If price is in this band, it usually means the price is oscillating.
 	// If price goes out of this band, we tend to not place sell orders or buy orders
@@ -151,12 +139,10 @@ type Strategy struct {
 	ShadowProtection      bool             `json:"shadowProtection"`
 	ShadowProtectionRatio fixedpoint.Value `json:"shadowProtectionRatio"`
 
-	bbgo.SmartStops
-
 	session *bbgo.ExchangeSession
 	book    *types.StreamOrderBook
 
-	state *State
+	ExitMethods bbgo.ExitMethodSet `json:"exits"`
 
 	// persistence fields
 	Position    *types.Position    `json:"position,omitempty" persistence:"position"`
@@ -172,8 +158,6 @@ type Strategy struct {
 	// neutralBoll is the neutral price section
 	neutralBoll *indicator.BOLL
 
-	stoch *indicator.STOCH
-
 	// StrategyController
 	bbgo.StrategyController
 }
@@ -184,10 +168,6 @@ func (s *Strategy) ID() string {
 
 func (s *Strategy) InstanceID() string {
 	return fmt.Sprintf("%s:%s", ID, s.Symbol)
-}
-
-func (s *Strategy) Initialize() error {
-	return s.SmartStops.InitializeStopControllers(s.Symbol)
 }
 
 func (s *Strategy) Subscribe(session *bbgo.ExchangeSession) {
@@ -207,7 +187,7 @@ func (s *Strategy) Subscribe(session *bbgo.ExchangeSession) {
 		})
 	}
 
-	s.SmartStops.Subscribe(session)
+	s.ExitMethods.SetAndSubscribe(session, s)
 }
 
 func (s *Strategy) Validate() error {
@@ -289,9 +269,9 @@ func (s *Strategy) placeOrders(ctx context.Context, midPrice fixedpoint.Value, k
 	baseBalance, hasBaseBalance := balances[s.Market.BaseCurrency]
 	quoteBalance, hasQuoteBalance := balances[s.Market.QuoteCurrency]
 
-	downBand := s.defaultBoll.LastDownBand()
-	upBand := s.defaultBoll.LastUpBand()
-	sma := s.defaultBoll.LastSMA()
+	downBand := s.defaultBoll.DownBand.Last()
+	upBand := s.defaultBoll.UpBand.Last()
+	sma := s.defaultBoll.SMA.Last()
 	log.Infof("%s bollinger band: up %f sma %f down %f", s.Symbol, upBand, sma, downBand)
 
 	bandPercentage := calculateBandPercentage(upBand, downBand, sma, midPrice.Float64())
@@ -360,7 +340,7 @@ func (s *Strategy) placeOrders(ctx context.Context, midPrice fixedpoint.Value, k
 	// WHEN: price breaks the upper band (price > window 2) == strongUpTrend
 	// THEN: we apply strongUpTrend skew
 	if s.TradeInBand {
-		if !inBetween(midPrice.Float64(), s.neutralBoll.LastDownBand(), s.neutralBoll.LastUpBand()) {
+		if !inBetween(midPrice.Float64(), s.neutralBoll.DownBand.Last(), s.neutralBoll.UpBand.Last()) {
 			log.Infof("tradeInBand is set, skip placing orders when the price is outside of the band")
 			return
 		}
@@ -413,42 +393,14 @@ func (s *Strategy) placeOrders(ctx context.Context, midPrice fixedpoint.Value, k
 		canSell = false
 	}
 
-	if canSell && s.SellAboveNeutralSMA && midPrice.Float64() < s.neutralBoll.LastSMA() {
-		canSell = false
-		log.Infof("%s sellAboveNeutralSMA is enabled, ignore sell order below sma", s.Symbol)
-	}
-
-	if s.BuyBelowNeutralSMA && midPrice.Float64() > s.neutralBoll.LastSMA() {
+	if s.BuyBelowNeutralSMA && midPrice.Float64() > s.neutralBoll.SMA.Last() {
 		canBuy = false
-	}
-
-	if canBuy && s.BuyBelowMiddleBB {
-		ndownBand := s.neutralBoll.LastDownBand()
-		nupBand := s.neutralBoll.LastUpBand()
-		nsma := s.neutralBoll.LastSMA()
-		nbandPercentage := 1 + calculateBandPercentage(nupBand, ndownBand, nsma, midPrice.Float64())
-		if nbandPercentage >= 1 {
-			canBuy = false
-		} else if nbandPercentage > s.LowerBBRatio.Float64() {
-			canBuy = false
-			log.Infof("%s buyBelowMiddleBB is enabled, set ratio %v, current %v", s.Symbol, s.LowerBBRatio, nbandPercentage)
-		}
-	}
-
-	if canBuy && s.BuyBelowSTOCH {
-		lastD := s.stoch.LastD()
-		if lastD > s.LowerSTOCHLimit.Float64() {
-			canBuy = false
-			log.Infof("%s buyBelowSTOCH is enabled, set limit %v, current %v", s.Symbol, s.LowerSTOCHLimit, lastD)
-		}
 	}
 
 	if canSell {
 		submitOrders = append(submitOrders, sellOrder)
-		// log.Info("%s can Sell %v", s.Symbol, sellOrder)
 	}
 	if canBuy {
-		// log.Info("%s can Buy %v", s.Symbol, buyOrder)
 		submitOrders = append(submitOrders, buyOrder)
 	}
 
@@ -488,18 +440,6 @@ func (s *Strategy) Run(ctx context.Context, orderExecutor bbgo.OrderExecutor, se
 		s.DynamicSpread.DynamicAskSpread = &indicator.SMA{IntervalWindow: types.IntervalWindow{s.Interval, s.DynamicSpread.Window}}
 	}
 
-	s.OnSuspend(func() {
-		s.Status = types.StrategyStatusStopped
-		_ = s.orderExecutor.GracefulCancel(ctx)
-		bbgo.Sync(s)
-	})
-
-	s.OnEmergencyStop(func() {
-		// Close 100% position
-		percentage := fixedpoint.NewFromFloat(1.0)
-		_ = s.ClosePosition(ctx, percentage)
-	})
-
 	if s.DisableShort {
 		s.Long = &[]bool{true}[0]
 	}
@@ -525,7 +465,6 @@ func (s *Strategy) Run(ctx context.Context, orderExecutor bbgo.OrderExecutor, se
 
 	s.neutralBoll = s.StandardIndicatorSet.BOLL(s.NeutralBollinger.IntervalWindow, s.NeutralBollinger.BandWidth)
 	s.defaultBoll = s.StandardIndicatorSet.BOLL(s.DefaultBollinger.IntervalWindow, s.DefaultBollinger.BandWidth)
-	s.stoch = s.StandardIndicatorSet.STOCH(s.NeutralBollinger.IntervalWindow)
 
 	// calculate group id for orders
 	instanceID := s.InstanceID()
@@ -555,17 +494,26 @@ func (s *Strategy) Run(ctx context.Context, orderExecutor bbgo.OrderExecutor, se
 	s.orderExecutor.BindEnvironment(s.Environment)
 	s.orderExecutor.BindProfitStats(s.ProfitStats)
 	s.orderExecutor.Bind()
-
 	s.orderExecutor.TradeCollector().OnPositionUpdate(func(position *types.Position) {
 		bbgo.Sync(s)
 	})
-
-	s.SmartStops.RunStopControllers(ctx, session, s.orderExecutor.TradeCollector())
+	s.ExitMethods.Bind(session, s.orderExecutor)
 
 	if bbgo.IsBackTesting {
 		log.Warn("turning of useTickerPrice option in the back-testing environment...")
 		s.UseTickerPrice = false
 	}
+
+	s.OnSuspend(func() {
+		_ = s.orderExecutor.GracefulCancel(ctx)
+		bbgo.Sync(s)
+	})
+
+	s.OnEmergencyStop(func() {
+		// Close 100% position
+		percentage := fixedpoint.NewFromFloat(1.0)
+		_ = s.ClosePosition(ctx, percentage)
+	})
 
 	session.UserDataStream.OnStart(func() {
 		if s.UseTickerPrice {
@@ -583,13 +531,9 @@ func (s *Strategy) Run(ctx context.Context, orderExecutor bbgo.OrderExecutor, se
 		}
 	})
 
-	session.MarketDataStream.OnKLineClosed(func(kline types.KLine) {
+	session.MarketDataStream.OnKLineClosed(types.KLineWith(s.Symbol, s.Interval, func(kline types.KLine) {
 		// StrategyController
 		if s.Status != types.StrategyStatusRunning {
-			return
-		}
-
-		if kline.Symbol != s.Symbol || kline.Interval != s.Interval {
 			return
 		}
 
@@ -599,12 +543,12 @@ func (s *Strategy) Run(ctx context.Context, orderExecutor bbgo.OrderExecutor, se
 			dynamicBidSpread, err := s.DynamicSpread.GetBidSpread()
 			if err == nil && dynamicBidSpread > 0 {
 				s.BidSpread = fixedpoint.NewFromFloat(dynamicBidSpread)
-				log.Infof("new bid spread: %v", s.BidSpread.Percentage())
+				log.Infof("%s dynamic bid spread updated: %s", s.Symbol, s.BidSpread.Percentage())
 			}
 			dynamicAskSpread, err := s.DynamicSpread.GetAskSpread()
 			if err == nil && dynamicAskSpread > 0 {
 				s.AskSpread = fixedpoint.NewFromFloat(dynamicAskSpread)
-				log.Infof("new ask spread: %v", s.AskSpread.Percentage())
+				log.Infof("%s dynamic ask spread updated: %s", s.Symbol, s.AskSpread.Percentage())
 			}
 		}
 
@@ -622,7 +566,7 @@ func (s *Strategy) Run(ctx context.Context, orderExecutor bbgo.OrderExecutor, se
 		} else {
 			s.placeOrders(ctx, kline.Close, &kline)
 		}
-	})
+	}))
 
 	// s.book = types.NewStreamBook(s.Symbol)
 	// s.book.BindStreamForBackground(session.MarketDataStream)
