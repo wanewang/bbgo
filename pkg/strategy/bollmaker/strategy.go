@@ -110,6 +110,13 @@ type Strategy struct {
 	// BuyBelowNeutralSMA if true, the market maker will only place buy order when the current price is below the neutral band SMA.
 	BuyBelowNeutralSMA bool `json:"buyBelowNeutralSMA"`
 
+	SellAboveNeutralSMA bool `json:"sellAboveNeutralSMA"`
+
+	BuyBelowMiddleBB bool `json:"buyBelowMiddleBB"`
+	LowerBBRatio fixedpoint.Value `json:"lowerBBRatio"`
+	BuyBelowSTOCH bool `json:"buyBelowSTOCH"`
+	LowerSTOCHLimit fixedpoint.Value `json:"lowerSTOCHLimit"`
+
 	// NeutralBollinger is the smaller range of the bollinger band
 	// If price is in this band, it usually means the price is oscillating.
 	// If price goes out of this band, we tend to not place sell orders or buy orders
@@ -157,6 +164,8 @@ type Strategy struct {
 
 	// neutralBoll is the neutral price section
 	neutralBoll *indicator.BOLL
+
+	stoch *indicator.STOCH
 
 	// StrategyController
 	bbgo.StrategyController
@@ -397,6 +406,32 @@ func (s *Strategy) placeOrders(ctx context.Context, midPrice fixedpoint.Value, k
 		canBuy = false
 	}
 
+	if canSell && s.SellAboveNeutralSMA && midPrice.Float64() < s.neutralBoll.SMA.Last() {
+		canSell = false
+		log.Infof("%s sellAboveNeutralSMA is enabled, ignore sell order below sma", s.Symbol)
+	}
+
+	if canBuy && s.BuyBelowMiddleBB {
+		ndownBand := s.neutralBoll.DownBand.Last()
+		nupBand := s.neutralBoll.UpBand.Last()
+		nsma := s.neutralBoll.SMA.Last()
+		nbandPercentage := 1 + calculateBandPercentage(nupBand, ndownBand, nsma, midPrice.Float64())
+		if nbandPercentage >= 1 {
+			canBuy = false
+		} else if nbandPercentage > s.LowerBBRatio.Float64() {
+			canBuy = false
+			log.Infof("%s buyBelowMiddleBB is enabled, set ratio %v, current %v", s.Symbol, s.LowerBBRatio, nbandPercentage)
+		}
+	}
+
+	if canBuy && s.BuyBelowSTOCH {
+		lastD := s.stoch.LastD()
+		if lastD > s.LowerSTOCHLimit.Float64() {
+			canBuy = false
+			log.Infof("%s buyBelowSTOCH is enabled, set limit %v, current %v", s.Symbol, s.LowerSTOCHLimit, lastD)
+		}
+	}
+
 	if canSell {
 		submitOrders = append(submitOrders, sellOrder)
 	}
@@ -465,6 +500,7 @@ func (s *Strategy) Run(ctx context.Context, orderExecutor bbgo.OrderExecutor, se
 
 	s.neutralBoll = s.StandardIndicatorSet.BOLL(s.NeutralBollinger.IntervalWindow, s.NeutralBollinger.BandWidth)
 	s.defaultBoll = s.StandardIndicatorSet.BOLL(s.DefaultBollinger.IntervalWindow, s.DefaultBollinger.BandWidth)
+	s.stoch = s.StandardIndicatorSet.STOCH(s.NeutralBollinger.IntervalWindow)
 
 	// calculate group id for orders
 	instanceID := s.InstanceID()
