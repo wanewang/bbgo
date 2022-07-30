@@ -3,11 +3,11 @@ package pivotshort
 import (
 	"context"
 
-	"github.com/c9s/bbgo/pkg/bbgo"
-	"github.com/c9s/bbgo/pkg/fixedpoint"
-	"github.com/c9s/bbgo/pkg/indicator"
-	"github.com/c9s/bbgo/pkg/risk"
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/bbgo"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/indicator"
+	"github.com/wanewang/bbgo/pkg/risk"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 type ResistanceShort struct {

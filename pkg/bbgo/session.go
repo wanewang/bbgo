@@ -13,13 +13,13 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
-	"github.com/c9s/bbgo/pkg/cache"
+	"github.com/wanewang/bbgo/pkg/cache"
 
-	exchange2 "github.com/c9s/bbgo/pkg/exchange"
-	"github.com/c9s/bbgo/pkg/fixedpoint"
-	"github.com/c9s/bbgo/pkg/service"
-	"github.com/c9s/bbgo/pkg/types"
-	"github.com/c9s/bbgo/pkg/util"
+	exchange2 "github.com/wanewang/bbgo/pkg/exchange"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/service"
+	"github.com/wanewang/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/util"
 )
 
 // ExchangeSession presents the exchange connection Session
