@@ -3,8 +3,8 @@ package types
 import (
 	"testing"
 
-	"github.com/c9s/bbgo/pkg/fixedpoint"
 	"github.com/stretchr/testify/assert"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
 )
 
 func TestRBOrderBook_EmptyBook(t *testing.T) {

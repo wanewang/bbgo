@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/c9s/bbgo/pkg/exchange/kucoin/kucoinapi"
-	"github.com/c9s/bbgo/pkg/fixedpoint"
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/exchange/kucoin/kucoinapi"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 func toGlobalBalanceMap(accounts []kucoinapi.Account) types.BalanceMap {

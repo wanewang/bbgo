@@ -3,8 +3,8 @@ package backtest
 import (
 	"sort"
 
-	"github.com/c9s/bbgo/pkg/fixedpoint"
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 type PriceOrder struct {

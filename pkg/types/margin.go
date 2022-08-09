@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/c9s/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
 )
 
 type FuturesExchange interface {

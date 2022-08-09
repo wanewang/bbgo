@@ -3,7 +3,7 @@ package types
 import (
 	"time"
 
-	"github.com/c9s/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
 )
 
 type PremiumIndex struct {

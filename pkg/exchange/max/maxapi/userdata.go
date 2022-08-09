@@ -9,8 +9,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/valyala/fastjson"
 
-	"github.com/c9s/bbgo/pkg/fixedpoint"
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 type BaseEvent struct {

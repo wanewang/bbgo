@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 type marketRequest struct {

@@ -17,10 +17,10 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 
-	"github.com/c9s/bbgo/pkg/bbgo"
-	"github.com/c9s/bbgo/pkg/fixedpoint"
-	"github.com/c9s/bbgo/pkg/service"
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/bbgo"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/service"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 const DefaultBindAddress = "localhost:8080"

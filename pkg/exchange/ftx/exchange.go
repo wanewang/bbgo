@@ -15,9 +15,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 
-	"github.com/c9s/bbgo/pkg/exchange/ftx/ftxapi"
-	"github.com/c9s/bbgo/pkg/fixedpoint"
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/exchange/ftx/ftxapi"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 const (

@@ -8,9 +8,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/c9s/bbgo/pkg/exchange/ftx"
-	"github.com/c9s/bbgo/pkg/fixedpoint"
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/exchange/ftx"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 func cobraInitRequired(required []string) func(cmd *cobra.Command, args []string) error {

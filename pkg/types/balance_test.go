@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/c9s/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
 )
 
 func TestBalanceMap_Add(t *testing.T) {

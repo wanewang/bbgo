@@ -8,9 +8,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/types"
 
-	"github.com/c9s/bbgo/pkg/bbgo"
+	"github.com/wanewang/bbgo/pkg/bbgo"
 )
 
 func init() {

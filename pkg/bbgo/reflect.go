@@ -3,7 +3,7 @@ package bbgo
 import (
 	"reflect"
 
-	"github.com/c9s/bbgo/pkg/dynamic"
+	"github.com/wanewang/bbgo/pkg/dynamic"
 )
 
 type InstanceIDProvider interface {
@@ -30,4 +30,3 @@ func callID(obj interface{}) string {
 	ret := m.Call(nil)
 	return ret[0].String() + ":"
 }
-

@@ -21,15 +21,15 @@ import (
 	"github.com/spf13/viper"
 	"gopkg.in/tucnak/telebot.v2"
 
-	exchange2 "github.com/c9s/bbgo/pkg/exchange"
-	"github.com/c9s/bbgo/pkg/fixedpoint"
-	"github.com/c9s/bbgo/pkg/interact"
-	"github.com/c9s/bbgo/pkg/notifier/slacknotifier"
-	"github.com/c9s/bbgo/pkg/notifier/telegramnotifier"
-	"github.com/c9s/bbgo/pkg/service"
-	"github.com/c9s/bbgo/pkg/slack/slacklog"
-	"github.com/c9s/bbgo/pkg/types"
-	"github.com/c9s/bbgo/pkg/util"
+	exchange2 "github.com/wanewang/bbgo/pkg/exchange"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/interact"
+	"github.com/wanewang/bbgo/pkg/notifier/slacknotifier"
+	"github.com/wanewang/bbgo/pkg/notifier/telegramnotifier"
+	"github.com/wanewang/bbgo/pkg/service"
+	"github.com/wanewang/bbgo/pkg/slack/slacklog"
+	"github.com/wanewang/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/util"
 )
 
 func init() {

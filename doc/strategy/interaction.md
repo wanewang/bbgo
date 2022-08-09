@@ -7,7 +7,7 @@ In your strategy, you can register your messenger interaction by commands.
 package mymaker
 
 import (
-    "github.com/c9s/bbgo/pkg/bbgo"
+    "github.com/wanewang/bbgo/pkg/bbgo"
 )
 
 func init() {

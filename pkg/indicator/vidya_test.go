@@ -3,8 +3,8 @@ package indicator
 import (
 	"testing"
 
-	"github.com/c9s/bbgo/pkg/types"
 	"github.com/stretchr/testify/assert"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 func Test_VIDYA(t *testing.T) {

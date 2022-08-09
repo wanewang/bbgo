@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	maxapi "github.com/c9s/bbgo/pkg/exchange/max/maxapi"
 	flag "github.com/spf13/pflag"
+	maxapi "github.com/wanewang/bbgo/pkg/exchange/max/maxapi"
 )
 
 func waitWithdrawalsComplete(ctx context.Context, client *maxapi.RestClient, currency string, limit int) error {

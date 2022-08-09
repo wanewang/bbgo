@@ -1,8 +1,8 @@
 package max
 
 import (
-	"github.com/c9s/bbgo/pkg/types"
 	"github.com/google/uuid"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 // BBGO is a broker on MAX

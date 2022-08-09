@@ -2,8 +2,8 @@ package optimizer
 
 import (
 	"fmt"
-	"github.com/c9s/bbgo/pkg/data/tsv"
-	"github.com/c9s/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/data/tsv"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
 	"io"
 	"strconv"
 )

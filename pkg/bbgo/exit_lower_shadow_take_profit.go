@@ -3,8 +3,8 @@ package bbgo
 import (
 	"context"
 
-	"github.com/c9s/bbgo/pkg/fixedpoint"
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 type LowerShadowTakeProfit struct {
@@ -29,7 +29,6 @@ func (s *LowerShadowTakeProfit) Bind(session *ExchangeSession, orderExecutor *Ge
 
 	stdIndicatorSet := session.StandardIndicatorSet(s.Symbol)
 	ewma := stdIndicatorSet.EWMA(s.IntervalWindow)
-
 
 	position := orderExecutor.Position()
 	session.MarketDataStream.OnKLineClosed(types.KLineWith(s.Symbol, s.Interval, func(kline types.KLine) {

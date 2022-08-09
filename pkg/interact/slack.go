@@ -14,7 +14,7 @@ import (
 	"github.com/slack-go/slack/slackevents"
 	"github.com/slack-go/slack/socketmode"
 
-	"github.com/c9s/bbgo/pkg/util"
+	"github.com/wanewang/bbgo/pkg/util"
 )
 
 type SlackReply struct {

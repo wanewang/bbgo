@@ -8,9 +8,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/c9s/bbgo/pkg/bbgo"
-	"github.com/c9s/bbgo/pkg/cmd/cmdutil"
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/bbgo"
+	"github.com/wanewang/bbgo/pkg/cmd/cmdutil"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 // go run ./cmd/bbgo kline --exchange=ftx --symbol=BTCUSDT

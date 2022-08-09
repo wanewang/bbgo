@@ -1,7 +1,7 @@
 package types
 
 import (
-	"github.com/c9s/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
 )
 
 var Four fixedpoint.Value = fixedpoint.NewFromInt(4)

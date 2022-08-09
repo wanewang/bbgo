@@ -12,10 +12,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/c9s/bbgo/pkg/fixedpoint"
-	"github.com/c9s/bbgo/pkg/types"
-	"github.com/c9s/bbgo/pkg/util"
 	"github.com/pkg/errors"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/util"
 )
 
 const defaultHTTPTimeout = time.Second * 15

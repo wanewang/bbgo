@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/c9s/bbgo/pkg/indicator"
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/indicator"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 // gap jump momentum

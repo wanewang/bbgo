@@ -9,9 +9,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"gonum.org/v1/gonum/floats"
 
-	"github.com/c9s/bbgo/pkg/bbgo"
-	"github.com/c9s/bbgo/pkg/fixedpoint"
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/bbgo"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 const ID = "fmaker"

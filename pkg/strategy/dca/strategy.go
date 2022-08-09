@@ -7,9 +7,9 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/c9s/bbgo/pkg/bbgo"
-	"github.com/c9s/bbgo/pkg/fixedpoint"
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/bbgo"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 const ID = "dca"
@@ -47,7 +47,6 @@ func (b BudgetPeriod) Duration() time.Duration {
 
 // Strategy is the Dollar-Cost-Average strategy
 type Strategy struct {
-
 	Environment *bbgo.Environment
 	Symbol      string `json:"symbol"`
 	Market      types.Market

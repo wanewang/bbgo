@@ -5,11 +5,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/c9s/bbgo/pkg/exchange/kucoin/kucoinapi"
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/wanewang/bbgo/pkg/exchange/kucoin/kucoinapi"
 )
 
 func init() {

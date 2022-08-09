@@ -32,9 +32,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/c9s/bbgo/pkg/bbgo"
-	"github.com/c9s/bbgo/pkg/types"
-	"github.com/c9s/bbgo/pkg/indicator"
+	"github.com/wanewang/bbgo/pkg/bbgo"
+	"github.com/wanewang/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/indicator"
 )
 
 type Strategy struct {}

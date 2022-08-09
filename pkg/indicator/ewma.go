@@ -3,7 +3,7 @@ package indicator
 import (
 	"time"
 
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 // These numbers should be aligned with bbgo MaxNumOfKLines and MaxNumOfKLinesTruncate

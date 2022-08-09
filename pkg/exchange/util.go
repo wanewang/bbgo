@@ -1,6 +1,6 @@
 package exchange
 
-import "github.com/c9s/bbgo/pkg/types"
+import "github.com/wanewang/bbgo/pkg/types"
 
 func GetSessionAttributes(exchange types.Exchange) (isMargin, isFutures, isIsolated bool, isolatedSymbol string) {
 	if marginExchange, ok := exchange.(types.MarginExchange); ok {

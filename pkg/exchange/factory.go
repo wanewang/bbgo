@@ -5,12 +5,12 @@ import (
 	"os"
 	"strings"
 
-	"github.com/c9s/bbgo/pkg/exchange/binance"
-	"github.com/c9s/bbgo/pkg/exchange/ftx"
-	"github.com/c9s/bbgo/pkg/exchange/kucoin"
-	"github.com/c9s/bbgo/pkg/exchange/max"
-	"github.com/c9s/bbgo/pkg/exchange/okex"
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/exchange/binance"
+	"github.com/wanewang/bbgo/pkg/exchange/ftx"
+	"github.com/wanewang/bbgo/pkg/exchange/kucoin"
+	"github.com/wanewang/bbgo/pkg/exchange/max"
+	"github.com/wanewang/bbgo/pkg/exchange/okex"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 func NewPublic(exchangeName types.ExchangeName) (types.Exchange, error) {

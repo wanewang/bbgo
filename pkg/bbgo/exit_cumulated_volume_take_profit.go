@@ -5,8 +5,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/c9s/bbgo/pkg/fixedpoint"
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 // CumulatedVolumeTakeProfit
@@ -72,7 +72,7 @@ func (s *CumulatedVolumeTakeProfit) Bind(session *ExchangeSession, orderExecutor
 				cqv.Float64(),
 				s.MinQuoteVolume.Float64(), kline.Close.Float64())
 
-			if err := orderExecutor.ClosePosition(context.Background(), fixedpoint.One, "cumulatedVolumeTakeProfit") ; err != nil {
+			if err := orderExecutor.ClosePosition(context.Background(), fixedpoint.One, "cumulatedVolumeTakeProfit"); err != nil {
 				log.WithError(err).Errorf("close position error")
 			}
 			return

@@ -3,8 +3,8 @@ package xbalance
 import (
 	"testing"
 
-	"github.com/c9s/bbgo/pkg/fixedpoint"
 	"github.com/stretchr/testify/assert"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
 )
 
 func TestState_PlainText(t *testing.T) {

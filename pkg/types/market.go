@@ -8,7 +8,7 @@ import (
 
 	"github.com/leekchan/accounting"
 
-	"github.com/c9s/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
 )
 
 type Duration time.Duration

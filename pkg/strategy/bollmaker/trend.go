@@ -1,6 +1,6 @@
 package bollmaker
 
-import "github.com/c9s/bbgo/pkg/indicator"
+import "github.com/wanewang/bbgo/pkg/indicator"
 
 type PriceTrend string
 

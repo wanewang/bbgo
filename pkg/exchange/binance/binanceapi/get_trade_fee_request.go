@@ -3,7 +3,7 @@ package binanceapi
 import (
 	"github.com/c9s/requestgen"
 
-	"github.com/c9s/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
 )
 
 type TradeFee struct {

@@ -5,7 +5,7 @@ package v3
 //go:generate -command DeleteRequest requestgen -method DELETE
 
 import (
-	maxapi "github.com/c9s/bbgo/pkg/exchange/max/maxapi"
+	maxapi "github.com/wanewang/bbgo/pkg/exchange/max/maxapi"
 )
 
 // create type alias

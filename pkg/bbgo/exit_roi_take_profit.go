@@ -3,8 +3,8 @@ package bbgo
 import (
 	"context"
 
-	"github.com/c9s/bbgo/pkg/fixedpoint"
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 // RoiTakeProfit force takes the profit by the given ROI percentage.

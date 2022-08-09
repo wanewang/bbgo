@@ -3,7 +3,7 @@ package bbgo
 import (
 	"github.com/sirupsen/logrus"
 
-	"github.com/c9s/bbgo/pkg/util"
+	"github.com/wanewang/bbgo/pkg/util"
 )
 
 var Notification = &Notifiability{

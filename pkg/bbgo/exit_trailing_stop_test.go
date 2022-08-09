@@ -6,9 +6,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/c9s/bbgo/pkg/fixedpoint"
-	"github.com/c9s/bbgo/pkg/types"
-	"github.com/c9s/bbgo/pkg/types/mocks"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/types/mocks"
 )
 
 // getTestMarket returns the BTCUSDT market information

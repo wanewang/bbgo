@@ -14,10 +14,10 @@ import (
 	"go.uber.org/multierr"
 	"golang.org/x/time/rate"
 
-	maxapi "github.com/c9s/bbgo/pkg/exchange/max/maxapi"
-	v3 "github.com/c9s/bbgo/pkg/exchange/max/maxapi/v3"
-	"github.com/c9s/bbgo/pkg/fixedpoint"
-	"github.com/c9s/bbgo/pkg/types"
+	maxapi "github.com/wanewang/bbgo/pkg/exchange/max/maxapi"
+	v3 "github.com/wanewang/bbgo/pkg/exchange/max/maxapi/v3"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 // closedOrderQueryLimiter is used for the closed orders query rate limit, 1 request per second

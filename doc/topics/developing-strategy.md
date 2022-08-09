@@ -24,7 +24,7 @@ You can also create a new file called `pkg/cmd/strategy/short.go` and import you
 
 ```
 import (
-    _ "github.com/c9s/bbgo/pkg/strategy/short"
+    _ "github.com/wanewang/bbgo/pkg/strategy/short"
 )
 ```
 
@@ -43,8 +43,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/c9s/bbgo/pkg/bbgo"
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/bbgo"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 const ID = "short"

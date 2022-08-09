@@ -4,7 +4,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 //go:generate callbackgen -type ATR

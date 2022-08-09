@@ -5,8 +5,8 @@ import (
 
 	"github.com/c9s/requestgen"
 
-	"github.com/c9s/bbgo/pkg/fixedpoint"
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 // interest type in response has 4 enums:

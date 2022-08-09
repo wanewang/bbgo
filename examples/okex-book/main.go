@@ -6,12 +6,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/c9s/bbgo/pkg/exchange/okex/okexapi"
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/wanewang/bbgo/pkg/exchange/okex/okexapi"
 )
 
 func init() {

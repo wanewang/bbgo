@@ -5,7 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/c9s/bbgo/pkg/dynamic"
+	"github.com/wanewang/bbgo/pkg/dynamic"
 )
 
 type ExitMethodSet []ExitMethod

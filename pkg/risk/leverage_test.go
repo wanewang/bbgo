@@ -3,8 +3,8 @@ package risk
 import (
 	"testing"
 
-	"github.com/c9s/bbgo/pkg/fixedpoint"
-	"github.com/c9s/bbgo/pkg/types"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/types"
 )
 
 func TestCalculateMarginCost(t *testing.T) {

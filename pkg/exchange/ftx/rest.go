@@ -15,7 +15,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/c9s/bbgo/pkg/util"
+	"github.com/wanewang/bbgo/pkg/util"
 )
 
 type transferRequest struct {

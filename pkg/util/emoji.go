@@ -1,7 +1,7 @@
 package util
 
 import (
-	"github.com/c9s/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
 )
 
 var LossEmoji = "🔥"
@@ -21,7 +21,6 @@ func PnLSignString(pnl fixedpoint.Value) string {
 	}
 	return pnl.String()
 }
-
 
 func PnLEmojiSimple(pnl fixedpoint.Value) string {
 	if pnl.Sign() < 0 {
@@ -60,4 +59,3 @@ func PnLEmojiMargin(pnl, margin, resolution fixedpoint.Value) (out string) {
 	}
 	return out
 }
-

@@ -6,8 +6,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/c9s/bbgo/pkg/dynamic"
-	"github.com/c9s/bbgo/pkg/service"
+	"github.com/wanewang/bbgo/pkg/dynamic"
+	"github.com/wanewang/bbgo/pkg/service"
 )
 
 type PersistenceSelector struct {

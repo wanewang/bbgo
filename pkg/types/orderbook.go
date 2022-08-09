@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/c9s/bbgo/pkg/fixedpoint"
-	"github.com/c9s/bbgo/pkg/sigchan"
+	"github.com/wanewang/bbgo/pkg/fixedpoint"
+	"github.com/wanewang/bbgo/pkg/sigchan"
 )
 
 type OrderBook interface {
